@@ -35,13 +35,19 @@ class TrySuite extends FunSuite with Matchers {
   test("Se debe poder hacer pattern match sobre un Try que es Failure"){
     f match {
       case Success(valor) => assert(false)
-      case Failure(e) => assert(true)
+      case Failure(e) => {
+        println(s"La excepcion generada en pattern march es: ${e.getMessage()}")
+        assert(true)
+      }
     }
   }
 
   test("Se debe poder hacer pattern match sobre un Try que es Success"){
     s match {
-      case Success(valor) => assert(true)
+      case Success(valor) => {
+        assert(valor == 1)
+        assert(true)
+      }
       case Failure(e) => assert(false)
     }
   }
@@ -54,6 +60,8 @@ class TrySuite extends FunSuite with Matchers {
   test("Un Success se debe poder map [assert con for-comp]"){
     val res = s.map(x=>"HOLA")
     assert(res.isSuccess)
+    assert(s == Success(1))
+    assert(res == Success("HOLA"))
 
     for{
       ss <- res
@@ -87,6 +95,45 @@ class TrySuite extends FunSuite with Matchers {
 
   }
 
+  test("Error en la recuperacion con recover Success(Exception)"){
+    val rec = f.recover{
+      case e:Exception => throw new Exception("Error propio")
+    }
+
+    assert(rec.isFailure)
+
+    rec match {
+      case Failure(e) => assert(e.getMessage == "Error propio")
+    }
+
+  }
+
+  test("Error en la recuperacion con recover Success(Failure)"){
+    val rec = f.recover{
+      case e:Exception => Try(throw new Exception("Error propio"))
+    }
+
+    assert(rec.isSuccess)
+
+    rec match{
+      case Success(v:Try[String]) => assert(v.isFailure)
+    }
+
+  }
+
+  test("Error en la recuperacion con recoverWith (Failure)"){
+    val rec = f.recoverWith{
+      case e:Exception => Try(throw new Exception("Error propio"))
+    }
+
+    println(s"rec vale $rec")
+    assert(rec.isFailure)
+    rec match {
+      case Failure(e) => assert(e.getMessage() == "Error propio")
+    }
+
+  }
+
   test("Un Failure se debe poder recuperar con recoverWith"){
 
     val res = f.map(x=>"HOLA")
@@ -94,7 +141,7 @@ class TrySuite extends FunSuite with Matchers {
       s
     }}
 
-    res.flatMap(x => Try(assert(x == 1)) )
+    assert(res == Success(1))
 
   }
 
@@ -151,6 +198,7 @@ class TrySuite extends FunSuite with Matchers {
     assert(res.isFailure)
 
   }
+
 
 
   /*

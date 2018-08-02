@@ -1,6 +1,6 @@
 package co.com.scalatraining.syntax
 
-import org.scalatest.FunSuite
+import org.scalatest.{Assertion, FunSuite}
 import sun.reflect.generics.reflectiveObjects.NotImplementedException
 
 class SyntaxSuite extends FunSuite{
@@ -42,6 +42,10 @@ class SyntaxSuite extends FunSuite{
     assertDoesNotCompile("var x")
   }
 
+  test("Scala si debe permitir declarar sin asignar pero con tipo"){
+    assertDoesNotCompile("var x:Int")
+  }
+
   test("Un object puede tener funciones miembro"){
 
     object obj {
@@ -54,7 +58,7 @@ class SyntaxSuite extends FunSuite{
         a + x
       }
 
-      def f2(a: Int) = {
+      def f2(a: Int): Int = {
         a + 2
       }
     }
@@ -78,6 +82,10 @@ class SyntaxSuite extends FunSuite{
     val mc: MyClass = new MyClass(1)
     val res = mc.f1
     assert(res == 2)
+
+    val mc2 = new MyClass(1)
+    assert(mc != mc2)
+
   }
 
   test("A un class se le puede  mutar su estado"){
@@ -98,7 +106,7 @@ class SyntaxSuite extends FunSuite{
     // A una class se le debe instanciar con new pasándole los atributos que define para su construccion
     val mc = new MyClass(1)
 
-    println(s"mc: ${mc}")
+    println(s"Imprimiendo una clase normal (no case): ${mc}")
 
     assert(mc.r == 0)
     val res1 = mc.f1
@@ -124,6 +132,7 @@ class SyntaxSuite extends FunSuite{
     assert(mcc2.f1(1) == 2)
 
     //Que pasa si intentamos println(mcc2) ?
+    println("Imprimiendo una clase class " + mcc2)
 
     // Pregunta cuáles son esos casos específicos
 
@@ -162,6 +171,20 @@ class SyntaxSuite extends FunSuite{
     assert(res == 2)
   }
 
+  test("class vs case class"){
+    class MyClass(a:Int)
+    case class MyCaseClass(a:Int)
+
+    val c1 = new MyClass(1)
+    val c2 = new MyClass(1)
+    val cc1 =  MyCaseClass(1)
+    val cc2 =  MyCaseClass(1)
+
+    assert(c1 != c2)
+    assert(cc1 == cc2)
+
+  }
+
 
   test("Pattern matching"){
     case class Profesor(nombre:String)
@@ -169,33 +192,38 @@ class SyntaxSuite extends FunSuite{
 
     val c1 = Curso("Scala", Profesor("JP"))
 
-    c1 match {
+    val res = c1 match {
       case x:Curso if x.p.nombre != "JP"=> {
         assert(x.nombre=="Scala")
         assert(x.p==Profesor("JP"))
+
       }
-      case Curso(n,p) if p.nombre == "JP" => {
+      case Curso(x,y) if y.nombre == "JP" => {
         println("Pasa?")
-        assert(n=="Scala")
-        assert(p==Profesor("JP"))
+        assert(x=="Scala")
+        assert(y==Profesor("JP"))
+
       }
     }
 
   }
 
+
   test("verificacion de unapply"){
-    class Profesor(nombre:String)
+    class Profesor(nombre:String, edad:Int)
 
     object Profesor{
-        def unapply(arg: Profesor): Option[String] = Some("NOMBRE-FIJO")
+        def unapply(arg: Profesor): Option[(String,Int)] = Some( ("NOMBRE-FIJO",0) )
     }
 
-    new Profesor("JP") match{
-      case Profesor(n) => {
+    new Profesor("JP", 33) match{
+      case Profesor(n, e) => {
         assert(n != "JP")
         assert(n=="NOMBRE-FIJO")
+        assert(e == 0)
       }
     }
+
   }
 
 }

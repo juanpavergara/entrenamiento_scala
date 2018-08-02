@@ -33,13 +33,14 @@ class ListSuite extends FunSuite {
     assertDoesNotCompile( "val l = List[String](\"1\", \"2\", 3)")
   }
 
-
   test("Una lista se debe poder recorrer imperativamente") {
     val lista = List(1, 2, 3, 4)
     assertResult(10) {
       var sum = 0
-      lista.foreach((x) =>
+      val a: Unit = lista.foreach(x => {
         sum += x
+        1
+        }
       )
       sum
     }
@@ -50,6 +51,28 @@ class ListSuite extends FunSuite {
     val l1 = List(1,2,3)
     val l2 = 4::l1
     assert(l2 == List(4,1,2,3))
+  }
+
+  test("Se pueden concatenar listas"){
+    val l1 = List(1,2)
+    val l2 = List(3,4)
+    val l3 = l1 ::: l2
+    assert(l3 == List(1,2,3,4))
+  }
+
+  test("Adicionar un elemento con :+"){
+    val l1 = List(1,2)
+    val l2 = l1:+3
+    assert(l2 == List(1,2,3))
+  }
+
+  test("Agregar antes y despues"){
+    val l = List(2,3,4)
+    val res =  1 :: (l :+ 5)
+    assert(res==List(1,2,3,4,5))
+
+    val res2 =  1+:l:+5
+    assert(res2 == List(1,2,3,4,5))
   }
 
   test("A una lista se le debe poder eliminar elementos con drop") {
@@ -108,9 +131,19 @@ class ListSuite extends FunSuite {
     }
   }
 
+  test("dropWhile"){
+    val l = List(1,2,3,4,5)
+    val r = l.dropWhile(x => x%2!=0)
+    println(r)
+    assert(r==List(2,3,4,5))
+    val r2 = l.dropWhile(x => x%2==0)
+    println(r2)
+    assert(r2==List(1,2,3,4,5))
+  }
+
   test("Una lista se debe poder acumular") {
-    val lista = List(1, 2, 3, 4)
-    assertResult(10) {
+    val lista = List(1, 2, 3, 4, 5)
+    assertResult(15) {
       lista.fold(0) { (acumulado, item) =>
         acumulado + item
       }
@@ -152,7 +185,11 @@ class ListSuite extends FunSuite {
 
   test("test - obtenga el promedio de los numeros pares") {
     val lista = List(1, 2, 3, 4, 6, 7, 8, 9, 10)
-    assert(true)
+
+    assert(6==lista
+      .filter(_%2==0)
+      .fold(0)((a,e)=>a+e)/lista.filter(_%2==0).size)
+
   }
 
   test("Una lista se debe poder dividir") {
@@ -170,8 +207,8 @@ class ListSuite extends FunSuite {
 
   test("Una lista se debe poder serializar") {
     val lista = List(1, 2, 3, 4)
-    assertResult("1&2&3&4") {
-      lista.mkString("&")
+    assertResult("1,2,3,4") {
+      lista.mkString(",")
     }
   }
 
@@ -181,6 +218,12 @@ class ListSuite extends FunSuite {
     val lista = List()
     val result = lista.headOption
     assert(result == None)
+  }
+
+  test("Se debe poder acceder al primer elemento de List no vacia de forma segura") {
+    val lista = List(1, 2, 3, 4)
+    val result = lista.headOption
+    assert(result == Some(1))
   }
 
 
@@ -201,10 +244,17 @@ class ListSuite extends FunSuite {
     case class MyCaseClass(nro:Int)
     val l = List(1, 2, 3)
 
-    val r = l.map(numero => MyCaseClass(numero))
+    //List[Int] => List[MyCaseClass]
+    val r: List[MyCaseClass] = l.map(numero => MyCaseClass(numero))
 
-    assert(r == List(MyCaseClass(1),MyCaseClass(2),MyCaseClass(3)))
+    assert(r == List(MyCaseClass(1),MyCaseClass(2), MyCaseClass(3)))
 
+  }
+
+  test("scanLeft acumula mientras ejecuta una funcion"){
+    val l = List(List(1,1,1), List(1,1,1), List(1,1,1))
+    val r =l.scanLeft(0)((acc,el)=> acc+el.sum)
+    assert(r == List(0,3,6,9))
   }
 
 
